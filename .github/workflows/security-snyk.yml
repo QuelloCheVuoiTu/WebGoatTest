@@ -9,7 +9,6 @@ on:
 
 jobs:
   snyk-scan:
-    name: Snyk Security Analysis
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -24,32 +23,27 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
       - name: Build project
-        run: ./gradlew build -x test --no-daemon
+        run: mvn clean compile -DskipTests
 
       - name: Install Snyk
         uses: snyk/actions/setup@master
 
-      # 🟢 Report completi (NON bloccanti)
-      - name: Generate Snyk Reports
+      - name: Snyk Test (Report)
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: |
-          snyk test --all-projects --json > snyk_report.json || true
-          snyk test --all-projects --sarif-file-output=snyk.sarif || true
-          snyk monitor --all-projects || true
+          snyk test --maven-aggregate-project --json > snyk_report.json || true
+          snyk test --maven-aggregate-project --sarif-file-output=snyk.sarif || true
+          snyk monitor --maven-aggregate-project || true
 
-      # 🔴 Quality Gate (bloccante)
       - name: Snyk Quality Gate
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: snyk test --all-projects --fail-on=high
+        run: snyk test --maven-aggregate-project --fail-on=high
 
-      - name: Upload SARIF to GitHub Security
+      - name: Upload SARIF
         if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
