@@ -22,13 +22,10 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: 'gradle'
+          cache: 'maven'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build project
-        run: ./gradlew clean build --no-daemon
+      - name: Build with Maven
+        run: mvn clean verify -DskipTests
 
       - name: SonarCloud Analysis (Quality Gate blocking)
         uses: SonarSource/sonarcloud-github-action@master
